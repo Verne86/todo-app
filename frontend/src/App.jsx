@@ -34,24 +34,22 @@ function App() {
         body: JSON.stringify({ title }),
       });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const newTodo = await res.json();
-      setTodos((prev) => [...prev, newTodo]);
+      await fetchTodos();
       setError(null);
     } catch (err) {
       setError(err.message);
     }
   }
 
-  async function toggleTodo(id, completed) {
+  async function toggleTodo(id) {
     try {
       const res = await fetch(`/api/todos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completed: !completed }),
+        body: JSON.stringify({}),
       });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const updated = await res.json();
-      setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      await fetchTodos();
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -62,7 +60,22 @@ function App() {
     try {
       const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      setTodos((prev) => prev.filter((t) => t.id !== id));
+      await fetchTodos();
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function addSubtask(parentId, title) {
+    try {
+      const res = await fetch(`/api/todos/${parentId}/subtasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      await fetchTodos();
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -71,13 +84,16 @@ function App() {
 
   return (
     <div className="app">
-      <h1>Todo App</h1>
+      <header className="app-header">
+        <h1>TASKS</h1>
+        <p className="app-subtitle">— stay on track —</p>
+      </header>
       {error && <p className="error">{error}</p>}
       <AddTodo onAdd={addTodo} />
       {loading ? (
-        <p className="loading">Loading todos...</p>
+        <p className="loading">loading...</p>
       ) : (
-        <TodoList todos={todos} onToggle={toggleTodo} onDelete={deleteTodo} />
+        <TodoList todos={todos} onToggle={toggleTodo} onDelete={deleteTodo} onAddSubtask={addSubtask} />
       )}
     </div>
   );

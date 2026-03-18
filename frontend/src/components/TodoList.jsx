@@ -1,6 +1,6 @@
 import TodoItem from './TodoItem.jsx';
 
-function TodoList({ todos, onToggle, onDelete }) {
+function TodoList({ todos, onToggle, onDelete, onAddSubtask }) {
   if (todos.length === 0) {
     return <p className="empty">No todos yet. Add one above.</p>;
   }
@@ -13,6 +13,7 @@ function TodoList({ todos, onToggle, onDelete }) {
           todo={todo}
           onToggle={onToggle}
           onDelete={onDelete}
+          onAddSubtask={onAddSubtask}
         />
       ))}
     </ul>
