@@ -1,55 +1,38 @@
 const express = require('express');
 const router = express.Router();
+const store = require('../store');
+const { buildTree } = require('../treeBuilder');
 
-let todos = [];
-let nextId = 1;
-
-// GET /api/todos — list all todos
+// GET /api/todos — return full nested tree
 router.get('/', (req, res) => {
-  res.json(todos);
+  res.json(buildTree(store.getAll()));
 });
 
-// POST /api/todos — create a todo
+// POST /api/todos — create a top-level todo
 router.post('/', (req, res) => {
   const { title } = req.body;
-
   if (!title || typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'title is required' });
   }
-
-  const todo = {
-    id: nextId++,
-    title: title.trim(),
-    completed: false,
-  };
-
-  todos.push(todo);
-  res.status(201).json(todo);
+  const item = store.create({ title: title.trim() });
+  res.status(201).json(item);
 });
 
 // PATCH /api/todos/:id — toggle completed
 router.patch('/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const todo = todos.find((t) => t.id === id);
-
-  if (!todo) {
-    return res.status(404).json({ error: 'Todo not found' });
-  }
-
-  todo.completed = !todo.completed;
-  res.json(todo);
+  const item = store.getById(id);
+  if (!item) return res.status(404).json({ error: 'Todo not found' });
+  const updated = store.update(id, { completed: !item.completed });
+  res.json(updated);
 });
 
-// DELETE /api/todos/:id — delete a todo
+// DELETE /api/todos/:id — delete todo
 router.delete('/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const index = todos.findIndex((t) => t.id === id);
-
-  if (index === -1) {
-    return res.status(404).json({ error: 'Todo not found' });
-  }
-
-  todos.splice(index, 1);
+  const item = store.getById(id);
+  if (!item) return res.status(404).json({ error: 'Todo not found' });
+  store.remove(id);
   res.status(204).send();
 });
 
